@@ -9,9 +9,9 @@ mso_set_val('mso-page-content-add-class', 'lightgallery1'); // класс лай
 
 // можно указать css-класс для BODY
 if (is_type('home'))
-	mso_set_val('body_class', 'mso-body-home lightgallery1'); // класс лайтгалери для главной
+	mso_set_val('body_class', 'body-home');
 else
-	mso_set_val('body_class', 'mso-body-all mso-body-' . getinfo('type'));
+	mso_set_val('body_class', 'body-' . getinfo('type'));
 
 // mso_set_val('show_thumb', false);
 // mso_set_val('show_thumb_type_page', false);
