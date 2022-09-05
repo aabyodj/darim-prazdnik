@@ -4,9 +4,9 @@
  * MaxSite CMS
  * (c) https://max-3000.com/ 
  * файл functions.php подключается при инициализации сайта
- * 
- * Функции для работы с шаблоном
  */
+  
+if ($fn = mso_fe('set_val.php')) require_once $fn;
 
 /**
  * Вывод секции HEAD
