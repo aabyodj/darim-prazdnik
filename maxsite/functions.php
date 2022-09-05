@@ -267,4 +267,142 @@ function my_set_opt($key, $val = '', $imp = false)
 	}
 }
 
+
+function next_color() {
+	static $colors = array('red', 'orange', 'yellow', 'green' , 'cyan', 'blue', 'violet');
+	static $index = 0;
+		
+	$result = $colors[$index];	
+	$index += (count($colors) + 1) / 2;	
+	$index = $index % count($colors);	
+	return $result;
+}
+
+function even_odd() {	//TODO: use CSS instead
+	static $even = false;	
+	if ($even) {
+		$even = false;
+		return 'even';
+	} else {
+		$even = true;
+		return 'odd';
+	}	
+}
+
+/**
+ * This is slightly modified copy of the function mso_menu_build() from core/format.php
+ * 
+ * формируем li-элементы для меню
+ * элементы представляют собой текст, где каждая строчка один пункт
+ * каждый пункт делается так:  http://ссылка | название | подсказка | class | class_для_span | атрибуты ссылки
+ * на выходе так:
+ * <li class="selected"><a href="url"><span>ссылка</span></a></li>
+ * если первый символ [ то это открывает группу ul 
+ * если ] то закрывает - позволяет создавать многоуровневые меню
+ * если адрес равен # то ссылка не формируется, только текст <li class=""><span>ссылка</span></li>
+ * если пункт меню равен --- то формируется разделитель li.divider Имеет смысл только в подпунктах
+ */
+function my_menu_build($menu = '', $select_css = 'selected', $add_link_admin = false){	
+	if ($add_link_admin and is_login()) {
+		$menu .= NR . 'admin|Admin';
+	}
+
+	$menu = str_replace("\r", "", $menu); // если это windows
+	$menu = str_replace("_NR_", "\n", $menu);
+	$menu = str_replace(" ~ ", "\n", $menu);
+	$menu = str_replace("\n\n\n", "\n", $menu);
+	$menu = str_replace("\n\n", "\n", $menu);
+
+	$menu = explode("\n", trim($menu));
+	
+	// обработаем меню на предмет пустых строк, корректности и подсчитаем кол-во элементов
+	$count_menu = 0;
+	foreach ($menu as $elem)	//TODO: get rid of this
+	{
+		if (strlen(trim($elem)) > 1) $count_menu++;
+	}
+
+	// определим текущий url
+	$http = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") ? "https://" : "http://";
+	$current_url = $http . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+
+	$out = '';
+	// обходим в цикле
+	
+	$i = 1; // номер пункта
+	$n = 0; // номер итерации цикла 
+	
+	foreach ($menu as $elem) {
+		// разобъем строчку по адрес | название
+		$elem = explode('|', trim($elem));
+		
+		if (count($elem) < 2 ) {
+			continue;
+		}
+		$url = trim($elem[0]);  // адрес
+		$name = trim($elem[1]); // название
+		
+		$title = (isset($elem[2])) ? 'title="' . htmlspecialchars(trim($elem[2])) . '"' : '';
+		
+		// если адрес = ## то не выводим ссылку
+		$a_link = (($url != '##') and ($url != '#')); 
+		
+		// нет в адресе http:// - значит это текущий сайт
+		// если начинается с # или  ? — ничего не делаем
+		if (
+			($url != '#') 
+			and strpos($url, '#') !== 0
+			and strpos($url, '?') !== 0
+			and strpos($url, 'http://') === false 
+			and strpos($url, 'https://') === false
+		) $url = ($url == '/') ? getinfo('siteurl') : getinfo('siteurl') . $url;
+		
+		// если текущий адрес совпал, значит мы на этой странице			
+		$class = ($url == $current_url) ? $select_css : '';
+		
+		// возможно указан css-класс
+		$css_class = (isset($elem[3])) ? trim($elem[3]) : '';
+		
+		// возможно указан class_для_span
+		$img = (isset($elem[4])) ? trim($elem[4]) : '';
+		if ($img = thumb_generate($img, 320, 320)) {
+			$img = '<span class="img" style="background: url(' . "'" . $img . "'" . ') no-repeat center; background-size: cover; opacity: 1;"></span>';
+		} else {
+			$img = '<span class="img"></span>';
+		}
+		
+		
+		// возможно указан атрибут_для_ссылки
+		$link_attr = (isset($elem[5])) ? ' ' . trim($elem[5]) : '';
+
+		// для первого элемента добавляем класс first
+		if ($i == 1) $class.= ' first';	//TODO: move this to CSS
+
+		// для последнего элемента добавляем класс last
+		if ($i == $count_menu) $class.= ' last'; //TODO: move this to CSS
+		
+		if ($a_link) {
+			$class .= ' ' . even_odd();	//TODO: move this to CSS
+			
+			if ($css_class == '') {
+				$class .= ' ' . next_color();
+			} else {
+				$class.= ' ' . $css_class;
+			}
+			
+			if ($class == ' ') $class = '';
+			$out .= '<li class="' . trim($class) . '"><a href="' . $url . '"' .$title . $link_attr . 
+				'>'. $img .'<span class="title">' . $name . '</span></a></li>' . NR;
+
+			$i++;
+		}
+
+		$n++;	
+	}
+	
+	$out = str_replace('<li class="">', '<li>', $out);
+	
+	return $out;
+}
+
 # end of file
