@@ -405,4 +405,17 @@ function my_menu_build($menu = '', $select_css = 'selected', $add_link_admin = f
 	return $out;
 }
 
+function image_for_page($p = false) {
+	global $page;
+	$out = false;
+	if ($p == false and isset($page)) {
+		$p = $page;
+	}
+	$p = (array) $p;	
+	if ($p and isset($p['page_meta']) and isset ($p['page_meta']['image_for_page']) and isset($p['page_meta']['image_for_page'][0])) {
+		$out = $p['page_meta']['image_for_page'][0];
+	}
+	return $out;
+ }
+
 # end of file
